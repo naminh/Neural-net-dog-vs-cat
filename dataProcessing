@@ -1,0 +1,15 @@
+function [crossVal,catvsdogPixel,catvsdogLabel] = catdogCVDataProcessing(nSample, k)
+        
+    load('catvsdogV2.mat'); % load data
+    catvsdogPixel = catvsdog(:,2:end)/255; % extract pixel values and normalise pixel values to 0 and 1
+    catvsdogLabel = catvsdog(:,1); % extract labels
+
+    % Create training, validation and test set with labels
+    nRows = size(catvsdog,1); % number of rows
+    index = randperm(nRows, nSample); % random permutation without replacement
+    
+    catvsdogPixel = catvsdogPixel(index,:);
+    catvsdogLabel = catvsdogLabel(index,:);
+    
+    crossVal = cvpartition(catvsdogLabel,'KFold',k); % stratified 10-fold cross validation
+end
