@@ -19,6 +19,7 @@ params(2) are the learning rates 1. params(3) is the momentum and
 params(4) is the regularization cost.
 %}
 
+conf.E_STOP_LR_REDUCE = 100; % reduce learning rate after conf.E_STOP_LR_REDUCE bad epochs
 conf.E_STOP = 5000; % prevent overfitting after E_STOP number of bad epochs
 conf.thresh = 0.2; % prevent overfitting by allowing set difference between train and val accuracy
 
@@ -35,7 +36,7 @@ conf.sNum = nSample*0.8/conf.bNum;
 
 for i = 1:crossVal.NumTestSets
     
-    t1 = clock % count time elapsed
+    tic;
     
     trainInd = crossVal.training(i);
     catvsdogTrainPixel = catvsdogPixel(trainInd,:); % training set but we need to take out validation set
@@ -57,7 +58,8 @@ for i = 1:crossVal.NumTestSets
     metrics = 0; % 1 - shows accuracy per epoch, 0 - no printing
     testErr(i) = nn_labCatvsdog(conf,trn_dat,trn_lab,vld_dat,vld_lab,tst_dat,tst_lab,metrics);
     
-    e = etime(clock, t1) % time elapsed in seconds
+    toc;
+    fprintf('Training fold number %d\n',i);
 end
 
 cvErr = sum(testErr)/k % test set error
