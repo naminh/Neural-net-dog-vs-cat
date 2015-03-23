@@ -1,0 +1,14 @@
+function tst_acc = nn_labCatvsdog(conf,trn_dat,trn_lab,vld_dat,vld_lab,tst_dat,tst_lab,metrics)
+    model = train_nnV2(conf,[],[],trn_dat,trn_lab,vld_dat,vld_lab,metrics); % train a backprop feedforward neural net
+    cout = run_nn(conf.activationFnc,model,tst_dat); % obtain results of the model applied to tst_dat
+    tst_acc = sum((cout-1)==tst_lab)/size(tst_lab,1); % test accuracy
+    
+    % if metrics equal to 1 then plot test accuracy
+    if metrics
+        visualize_1l_filters(model.Ws{1},2,28,28,'minmax');
+        for i=1:length(conf.hidNum)
+            disp(model.Ws{i});
+        end
+        fprintf('Test accuracy = %.5f\n',tst_acc);
+    end
+end
