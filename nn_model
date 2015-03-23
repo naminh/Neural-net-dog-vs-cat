@@ -1,0 +1,63 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Cat & dog image recognition using backprogation feed-forward neural nets  %
+% Code written and edited by Minh Nguyen & Anderson Haynes                  %
+% Source of code: Week 5 Neural Computing (INM427) lab                      %
+% Data source from https://www.kaggle.com/c/dogs-vs-cats/download/train.zip % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+clc; clear all;
+
+% Initialise parameters
+conf.hidNum = [10 10 10]; % number of nodes in each hidden layer
+% activation function for hidden and output layer: relu, softplus, tansig, logsig or purelin
+conf.activationFnc = {'relu','relu','relu','logsig'}; 
+conf.eNum   = 10000;% set number of epochs
+conf.params = [0.1 0.3 0.001 0.0001]; 
+%{
+An array consisting of learning parameters. params(1) =
+params(2) are the learning rates 1. params(3) is the momentum and
+params(4) is the regularization cost.
+%}
+
+conf.E_STOP = 5000; % prevent overfitting after E_STOP number of bad epochs
+conf.thresh = 0.2; % prevent overfitting by allowing set difference between train and val accuracy
+
+nSample = 3000; % subsample size
+k = 10; % cross validation fold
+[crossVal,catvsdogPixel,catvsdogLabel] = catdogCVDataProcessing(nSample, k); % pre-processing data with 10-fold stratified cross validation
+
+testErr = zeros(crossVal.NumTestSets,1); % to calculate test set error
+
+% number of batches and number of samples in each batch for updates
+% conf.bNum * conf.sNum = training set size
+conf.bNum = 10;
+conf.sNum = nSample*0.8/conf.bNum;
+
+for i = 1:crossVal.NumTestSets
+    
+    t1 = clock % count time elapsed
+    
+    trainInd = crossVal.training(i);
+    catvsdogTrainPixel = catvsdogPixel(trainInd,:); % training set but we need to take out validation set
+    catvsdogTrainLabel = catvsdogLabel(trainInd,:); % labels for training set
+
+    vld_dat = catvsdogTrainPixel(1:(nSample/10),:); % create validation set from training set with equal size of test set
+    vld_lab = catvsdogTrainLabel(1:(nSample/10),:); % labels for validation set
+
+    trn_dat = catvsdogTrainPixel((nSample/10)+1:end,:); % training set without validation set part
+    trn_lab = catvsdogTrainLabel((nSample/10)+1:end,:); % labels for new training set        
+
+    testInd = crossVal.test(i);
+    tst_dat = catvsdogPixel(testInd,:); % test set
+    tst_lab = catvsdogLabel(testInd,:); % labels for test set
+
+    % Test loaded data
+    %show_images(trn_dat,100,28,28);
+    
+    metrics = 0; % 1 - shows accuracy per epoch, 0 - no printing
+    testErr(i) = nn_labCatvsdog(conf,trn_dat,trn_lab,vld_dat,vld_lab,tst_dat,tst_lab,metrics);
+    
+    e = etime(clock, t1) % time elapsed in seconds
+end
+
+cvErr = sum(testErr)/k % test set error
