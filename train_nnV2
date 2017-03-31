@@ -146,5 +146,4 @@ if metrics
     plot(1:size(plot_mse,2),plot_mse);    
     xlabel('Epochs');ylabel('MSE');
 end
-
 end
